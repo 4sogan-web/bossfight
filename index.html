@@ -1,0 +1,407 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <title></title>
+  <meta name="Generator" content="Cocoa HTML Writer">
+  <meta name="CocoaVersion" content="2575.7">
+  <style type="text/css">
+    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica}
+    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; min-height: 14.0px}
+  </style>
+</head>
+<body>
+<p class="p1">&lt;!doctype html&gt;</p>
+<p class="p1">&lt;html lang="tr"&gt;</p>
+<p class="p1">&lt;head&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;meta charset="utf-8" /&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;meta name="viewport" content="width=device-width, initial-scale=1" /&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;title&gt;BossFight Gündem&lt;/title&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;!-- Tailwind (CDN) --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;script src="https://cdn.tailwindcss.com"&gt;&lt;/script&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;!-- React 18 UMD + Babel (tarayıcıda JSX derler) --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"&gt;&lt;/script&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"&gt;&lt;/script&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;script src="https://unpkg.com/@babel/standalone/babel.min.js"&gt;&lt;/script&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;!-- Renk paleti: zemin #0A1217, teal #00BFA6, mint #2BD9AF, kart #121A20, yazı #E9F0F2 --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;style&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>:root{</p>
+<p class="p1"><span class="Apple-converted-space">      </span>--bg:#0A1217; --teal:#00BFA6; --mint:#2BD9AF;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>--card:#121A20; --text:#E9F0F2; --dim:#AAB7BF; --border:#2A3A42;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>html,body{background:var(--bg);}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;/style&gt;</p>
+<p class="p1">&lt;/head&gt;</p>
+<p class="p1">&lt;body&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;div id="root"&gt;&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;script type="text/babel"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const {useEffect,useMemo,useRef,useState} = React;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>// ---- Tema objesi (JS tarafı)</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const COLORS = {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>bg:"var(--bg)", teal:"var(--teal)", mint:"var(--mint)",</p>
+<p class="p1"><span class="Apple-converted-space">      </span>card:"var(--card)", text:"var(--text)", dim:"var(--dim)", border:"var(--border)"</p>
+<p class="p1"><span class="Apple-converted-space">    </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>// ---- Yardımcılar</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const todayKey = () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const d = new Date(), y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,"0"), day=String(d.getDate()).padStart(2,"0");</p>
+<p class="p1"><span class="Apple-converted-space">      </span>return `${y}${m}${day}`;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>};</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const getDailyCount = () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const key=`bfgDaily_${todayKey()}`; const raw=localStorage.getItem(key);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>return { key, count: raw?Number(raw):0 };</p>
+<p class="p1"><span class="Apple-converted-space">    </span>};</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const incDailyCount = () =&gt; { const {key,count}=getDailyCount(); const next=count+1; localStorage.setItem(key,String(next)); return next; };</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const sentenceSplit = t =&gt; (t||"").split(/(?&lt;=[.!?])\s+/).filter(Boolean);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const naiveSummaryBullets = (t,max=3) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const s=sentenceSplit(t); const b=s.slice(0,max);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>while(b.length&lt;max) b.push("(Özet için içerik yetersiz)");</p>
+<p class="p1"><span class="Apple-converted-space">      </span>return b;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>// ---- Örnek haberler (demo)</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const SAMPLE_NEWS = [</p>
+<p class="p1"><span class="Apple-converted-space">      </span>{ title:"Deepfake düzenlemesi Meclis'te görüşülüyor",</p>
+<p class="p1"><span class="Apple-converted-space">        </span>source:"Anadolu Ajansı",</p>
+<p class="p1"><span class="Apple-converted-space">        </span>content:"Meclis'te dijital manipülasyon ve deepfake içeriklerine yönelik yeni düzenleme taslağı ele alınıyor. Taslak, seçim dönemlerinde yapay içeriklerin açık şekilde etiketlenmesini öngörüyor. Platformlara, şeffaflık raporu ve hızlı kaldırma yükümlülüğü getiriliyor." },</p>
+<p class="p1"><span class="Apple-converted-space">      </span>{ title:"Yeni nesil batarya teknolojisi elektrikli araçlarda menzili artıracak",</p>
+<p class="p1"><span class="Apple-converted-space">        </span>source:"TRT Haber",</p>
+<p class="p1"><span class="Apple-converted-space">        </span>content:"Yerel bir Ar-Ge konsorsiyumu, daha yüksek enerji yoğunluklu ve geri dönüştürülebilir katı hâl batarya prototipi tanıttı. İlk pilot filonun 2026'da yollara çıkması hedefleniyor. Tedarik zincirinde yerli katkı oranının artırılması amaçlanıyor." },</p>
+<p class="p1"><span class="Apple-converted-space">      </span>{ title:"Dijital telif platformu içerik üreticilerine doğrudan ödeme başlattı",</p>
+<p class="p1"><span class="Apple-converted-space">        </span>source:"Bloomberg HT",</p>
+<p class="p1"><span class="Apple-converted-space">        </span>content:"Türkiye merkezli bir girişim, haber ve makale alıntıları için içerik üreticilerine telif dağıtan aracı bir katman duyurdu. Yayıncılar ve platformlar arasında şeffaf bir API ile tıklama ve alıntı bazlı dağıtım yapılacak. İlk anlaşmalar imzalanmaya başladı." },</p>
+<p class="p1"><span class="Apple-converted-space">    </span>];</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>// ---- Puanlama</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const SCORING = {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>q1:{ correct:100, wrong:-20 },</p>
+<p class="p1"><span class="Apple-converted-space">      </span>q2:{ correct:150 },</p>
+<p class="p1"><span class="Apple-converted-space">      </span>sliderMax:120,</p>
+<p class="p1"><span class="Apple-converted-space">      </span>prediction:{ provisional:80 },</p>
+<p class="p1"><span class="Apple-converted-space">      </span>memePerChar:1, memeMax:60,</p>
+<p class="p1"><span class="Apple-converted-space">      </span>streak:[1,1.05,1.1,1.15,1.2,1.22,1.25],</p>
+<p class="p1"><span class="Apple-converted-space">    </span>};</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const sliderScore = (guess,target=68) =&gt; Math.round(Math.max(0, SCORING.sliderMax - Math.abs(guess-target)*2));</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const memeScore = t =&gt; Math.min(SCORING.memeMax, (t||"").trim().length * SCORING.memePerChar);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const streakMultiplierFromLocal = () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const raw=localStorage.getItem("bfgStreak");</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const last=localStorage.getItem("bfgStreakLast");</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const today=todayKey(); let streak=raw?Number(raw):0;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if(last &amp;&amp; last!==today){</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const dLast=new Date(`${last.slice(0,4)}-${last.slice(4,6)}-${last.slice(6,8)}`);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const diff=Math.floor((new Date()-dLast)/(1000*60*60*24));</p>
+<p class="p1"><span class="Apple-converted-space">        </span>if(diff===1) streak=Math.min(streak+1,7); else if(diff&gt;1) streak=1;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>} else if(!last){ streak=1; }</p>
+<p class="p1"><span class="Apple-converted-space">      </span>localStorage.setItem("bfgStreak",String(streak));</p>
+<p class="p1"><span class="Apple-converted-space">      </span>localStorage.setItem("bfgStreakLast",today);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>return SCORING.streak[Math.min(streak-1, SCORING.streak.length-1)];</p>
+<p class="p1"><span class="Apple-converted-space">    </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>// ---- SVG → PNG</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const downloadKillCardPNG = async (svgRef, fileName="killcard.png") =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if(!svgRef.current) return;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const svgEl=svgRef.current;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const serializer=new XMLSerializer();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const src=serializer.serializeToString(svgEl);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const svg64=btoa(unescape(encodeURIComponent(src)));</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const img=new Image();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const w=svgEl.viewBox.baseVal.width||1080, h=svgEl.viewBox.baseVal.height||1920, scale=2;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>return new Promise(resolve=&gt;{</p>
+<p class="p1"><span class="Apple-converted-space">        </span>img.onload=()=&gt;{</p>
+<p class="p1"><span class="Apple-converted-space">          </span>const canvas=document.createElement("canvas");</p>
+<p class="p1"><span class="Apple-converted-space">          </span>canvas.width=w*scale; canvas.height=h*scale;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>const ctx=canvas.getContext("2d");</p>
+<p class="p1"><span class="Apple-converted-space">          </span>ctx.fillStyle=getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();</p>
+<p class="p1"><span class="Apple-converted-space">          </span>ctx.fillRect(0,0,canvas.width,canvas.height);</p>
+<p class="p1"><span class="Apple-converted-space">          </span>ctx.drawImage(img,0,0,canvas.width,canvas.height);</p>
+<p class="p1"><span class="Apple-converted-space">          </span>const a=document.createElement("a"); a.href=canvas.toDataURL("image/png"); a.download=fileName; a.click();</p>
+<p class="p1"><span class="Apple-converted-space">          </span>resolve(true);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>};</p>
+<p class="p1"><span class="Apple-converted-space">        </span>img.src="data:image/svg+xml;base64,"+svg64;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>});</p>
+<p class="p1"><span class="Apple-converted-space">    </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>// ---- UI parçaları</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const Chip = ({children}) =&gt; (</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;span className="inline-flex items-center px-2 py-1 text-xs rounded-full"</p>
+<p class="p1"><span class="Apple-converted-space">            </span>style={{background:"#0f1a20", color:COLORS.mint, border:`1px solid ${COLORS.border}`}}&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>{children}</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const Card = ({children}) =&gt; (</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div className="rounded-2xl p-5 shadow-lg" style={{background:COLORS.card, border:`1px solid ${COLORS.border}`}}&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>{children}</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const Button = ({children,onClick,variant="primary",disabled}) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const base="px-4 py-2 rounded-xl text-sm font-semibold transition-opacity";</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const style = variant==="outline"</p>
+<p class="p1"><span class="Apple-converted-space">        </span>? { color:COLORS.teal, border:`1px solid ${COLORS.teal}`, background:"transparent" }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>: { background:COLORS.teal, color:"#07241F" };</p>
+<p class="p1"><span class="Apple-converted-space">      </span>return &lt;button disabled={disabled} onClick={onClick}</p>
+<p class="p1"><span class="Apple-converted-space">                     </span>className={`${base} ${disabled?"opacity-50":"hover:opacity-90"}`} style={style}&gt;{children}&lt;/button&gt;;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>};</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const SectionTitle = ({children}) =&gt; &lt;h2 className="text-xl font-bold mb-3" style={{color:COLORS.text}}&gt;{children}&lt;/h2&gt;;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const Text = ({children,dim}) =&gt; &lt;p className={`text-sm ${dim?"opacity-80":""}`} style={{color:COLORS.text}}&gt;{children}&lt;/p&gt;;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>// ---- Kill Card SVG</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const KillCardSVG = ({ title, source, score, streak, bullets, svgRef }) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const w=1080, h=1920;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>return (</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;svg ref={svgRef} viewBox={`0 0 ${w} ${h}`} width={w} height={h} xmlns="http://www.w3.org/2000/svg"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;defs&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;linearGradient id="g" x1="0" x2="1" y1="0" y2="1"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;stop offset="0%" stopColor="#0A1217"/&gt;&lt;stop offset="100%" stopColor="#0E1E22"/&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/linearGradient&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;/defs&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;rect x="0" y="0" width={w} height={h} fill="url(#g)" /&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;rect x="60" y="80" width={w-120} height="170" rx="24" fill="#0f1a20" stroke="#2A3A42" /&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;text x="100" y="160" fill="#E9F0F2" fontFamily="Inter, system-ui" fontWeight="700" fontSize="48"&gt;BossFight Gündem&lt;/text&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;text x="100" y="210" fill="#2BD9AF" fontFamily="Inter, system-ui" fontSize="28"&gt;Kill Card&lt;/text&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;rect x="60" y="280" width={w-120} height="500" rx="24" fill="#121A20" stroke="#2A3A42" /&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;text x="100" y="350" fill="#E9F0F2" fontFamily="Inter, system-ui" fontWeight="700" fontSize="40"&gt;{title}&lt;/text&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;text x="100" y="400" fill="#AAB7BF" fontFamily="Inter, system-ui" fontSize="28"&gt;Kaynak: {source}&lt;/text&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>{bullets.slice(0,3).map((b,i)=&gt;(</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;text key={i} x="100" y={460+i*60} fill="#E9F0F2" fontFamily="Inter, system-ui" fontSize="28"&gt;• {b.length&gt;80?b.slice(0,77)+"…":b}&lt;/text&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>))}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;rect x="60" y="820" width={w-120} height="400" rx="24" fill="#121A20" stroke="#2A3A42" /&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;text x="100" y="890" fill="#2BD9AF" fontFamily="Inter, system-ui" fontWeight="700" fontSize="36"&gt;Skor&lt;/text&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;text x="100" y="950" fill="#E9F0F2" fontFamily="Inter, system-ui" fontWeight="800" fontSize="80"&gt;{score}&lt;/text&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;text x="100" y="1020" fill="#AAB7BF" fontFamily="Inter, system-ui" fontSize="26"&gt;Streak: x{streak.toFixed(2)}&lt;/text&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;text x="100" y="1080" fill="#AAB7BF" fontFamily="Inter, system-ui" fontSize="24"&gt;Doğruluk, kaynak ve slider puanları baz alınmıştır.&lt;/text&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;rect x="60" y="1260" width={w-120} height="520" rx="24" fill="#121A20" stroke="#2A3A42" /&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;text x="100" y="1330" fill="#2BD9AF" fontFamily="Inter, system-ui" fontWeight="700" fontSize="36"&gt;Rozetler&lt;/text&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;text x="100" y="1400" fill="#E9F0F2" fontFamily="Inter, system-ui" fontSize="28"&gt;🏅 Simülakr Avcısı • 🧭 Kaynak Avcısı • 🧠 Anima Analisti&lt;/text&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;text x="100" y="1480" fill="#AAB7BF" fontFamily="Inter, system-ui" fontSize="24"&gt;bossfightgundem.com&lt;/text&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/svg&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>// ---- Uygulama</p>
+<p class="p1"><span class="Apple-converted-space">    </span>function App(){</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const [step,setStep]=useState("landing");</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const [limitReached,setLimitReached]=useState(false);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const [news,setNews]=useState(SAMPLE_NEWS[0]);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const [newsText,setNewsText]=useState("");</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const [bullets,setBullets]=useState([]);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const [counterView,setCounterView]=useState(0);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const [q1,setQ1]=useState(null), [q2,setQ2]=useState(null), [q3,setQ3]=useState(50), [q4,setQ4]=useState(null), [q5,setQ5]=useState("");</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const [score,setScore]=useState(0), [streakMult,setStreakMult]=useState(1);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const svgRef=useRef(null);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>useEffect(()=&gt;{ const {count}=getDailyCount(); setCounterView(count); setLimitReached(count&gt;=3); },[step]);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>const prepareSummary=(n)=&gt;{</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const txt=newsText.trim()||n.content;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const b=naiveSummaryBullets(txt,3);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const oppose="Karşıt görüş: Aynı veriler farklı bağlamda farklı sonuçlar doğurabilir.";</p>
+<p class="p1"><span class="Apple-converted-space">        </span>setBullets([...b, oppose]);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>const startFlow=(n)=&gt;{</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const {count}=getDailyCount();</p>
+<p class="p1"><span class="Apple-converted-space">        </span>if(count&gt;=3){ setLimitReached(true); return; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const next=incDailyCount();</p>
+<p class="p1"><span class="Apple-converted-space">        </span>setCounterView(next);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>setNews(n);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>prepareSummary(n);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>setStreakMult(streakMultiplierFromLocal());</p>
+<p class="p1"><span class="Apple-converted-space">        </span>setQ1(null); setQ2(null); setQ3(50); setQ4(null); setQ5(""); setScore(0);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>setStep("summary");</p>
+<p class="p1"><span class="Apple-converted-space">      </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>const computeScore=()=&gt;{</p>
+<p class="p1"><span class="Apple-converted-space">        </span>let s=0;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>if(q1===true) s+=100; else if(q1===false) s+=-20;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>if(q2===0) s+=150;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>s+=sliderScore(q3,68);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>if(q4!==null) s+=80;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>s+=memeScore(q5);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>s=Math.round(s*streakMult);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>setScore(s);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>useEffect(()=&gt;{ if(step==="killcard") computeScore(); },[step]);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>const options = useMemo(()=&gt;[news.source,"Kaynak A","Kaynak B"],[news.source]);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>const Landing=()=&gt;(</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div className="max-w-5xl mx-auto p-6"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;header className="flex items-center justify-between mb-6"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;h1 className="text-2xl font-extrabold" style={{color:COLORS.text}}&gt;BossFight Gündem&lt;/h1&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div className="flex items-center gap-2"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;Chip&gt;Günlük limit: 3 haber&lt;/Chip&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;Chip&gt;Bugün: {counterView}/3&lt;/Chip&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;/header&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">          </span>{limitReached &amp;&amp; (</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;Card&gt;&lt;p className="text-sm" style={{color:COLORS.text}}&gt;Günlük haber limitine ulaştın. Yarın tekrar gel; streak çarpanın korunur.&lt;/p&gt;&lt;/Card&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>)}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;div className="grid md:grid-cols-3 gap-4 mt-4"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>{SAMPLE_NEWS.map((n,idx)=&gt;(</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;Card key={idx}&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;div className="flex flex-col gap-2"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>&lt;Chip&gt;{n.source}&lt;/Chip&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>&lt;h3 className="text-lg font-bold" style={{color:COLORS.text}}&gt;{n.title}&lt;/h3&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>&lt;Text dim&gt;{n.content.slice(0,120)}…&lt;/Text&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>&lt;div className="flex gap-2 mt-2"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;Button disabled={limitReached} onClick={()=&gt;startFlow(n)}&gt;Bu haberi oyna&lt;/Button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;/Card&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>))}</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;div className="mt-6 grid md:grid-cols-2 gap-4"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;Card&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;SectionTitle&gt;URL ya da metinle başla&lt;/SectionTitle&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;Text dim&gt;Metni kutuya yapıştır; özet ve oyun akışı hemen oluşur.&lt;/Text&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;textarea className="w-full mt-3 bg-transparent rounded-xl p-3 border"</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>style={{borderColor:COLORS.border, color:COLORS.text}} rows="5"</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>placeholder="Haber metnini buraya yapıştır (demo: 3-4 cümle yeterli)"</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>value={newsText} onChange={(e)=&gt;setNewsText(e.target.value)} /&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;div className="mt-3 flex gap-2"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;Button disabled={limitReached} onClick={()=&gt;startFlow({</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>title:"Kendi metninle dene", source:"Kullanıcı",</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>content: newsText || "Kısa bir metin örneği. Bu cümle bir özet oluşturur. İkinci cümle akışı tamamlar. Üçüncü cümle de bağlam ekler."</p>
+<p class="p1"><span class="Apple-converted-space">                </span>})}&gt;Metnimle başla&lt;/Button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;Button variant="outline" onClick={()=&gt;{localStorage.clear(); location.reload();}}&gt;Limit &amp; streak sıfırla&lt;/Button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/Card&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>const Summary=()=&gt;(</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div className="max-w-3xl mx-auto p-6"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;div className="flex items-center justify-between mb-4"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;Chip&gt;{news.source}&lt;/Chip&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;Chip&gt;Streak x{streakMult.toFixed(2)}&lt;/Chip&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;Card&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;h2 className="text-2xl font-bold mb-2" style={{color:COLORS.text}}&gt;{news.title}&lt;/h2&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;SectionTitle&gt;Turbo Özet (60 sn)&lt;/SectionTitle&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;ul className="list-disc pl-6" style={{color:COLORS.text}}&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>{bullets.map((b,i)=&gt;(&lt;li key={i} className="mb-1"&gt;{b}&lt;/li&gt;))}</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/ul&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div className="mt-4 flex gap-2"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;Button onClick={()=&gt;setStep("quiz")}&gt;Mini Oyuna Geç&lt;/Button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;Button variant="outline" onClick={()=&gt;setStep("landing")}&gt;Geri&lt;/Button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;/Card&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>const Quiz=()=&gt;(</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div className="max-w-3xl mx-auto p-6 space-y-4"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;Card&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;SectionTitle&gt;A1: İddia Doğru mu?&lt;/SectionTitle&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;Text dim&gt;{news.title}&lt;/Text&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div className="mt-3 flex gap-2"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;Button variant={q1===true?"":"outline"} onClick={()=&gt;setQ1(true)}&gt;Doğru&lt;/Button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;Button variant={q1===false?"":"outline"} onClick={()=&gt;setQ1(false)}&gt;Yanlış&lt;/Button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;/Card&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;Card&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;SectionTitle&gt;A2: Kaynağı Bul&lt;/SectionTitle&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div className="flex flex-wrap gap-2"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>{[news.source,"Kaynak A","Kaynak B"].map((o,i)=&gt;(</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;Button key={i} variant={q2===i?"":"outline"} onClick={()=&gt;setQ2(i)}&gt;{o}&lt;/Button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>))}</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;/Card&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;Card&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;SectionTitle&gt;A3: Kanıt ↔ Yorum&lt;/SectionTitle&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;input type="range" min="0" max="100" value={q3} onChange={(e)=&gt;setQ3(Number(e.target.value))} className="w-full"/&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div className="flex justify-between text-xs mt-1" style={{color:COLORS.dim}}&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;span&gt;Kanıt&lt;/span&gt;&lt;span&gt;Yorum&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;/Card&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;Card&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;SectionTitle&gt;A4: 7 Günlük Tahmin&lt;/SectionTitle&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div className="flex flex-wrap gap-2"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>{["Onay süreci hızlanır","Ek düzenleme ile uzar","Süreçte rafa kalkar"].map((o,i)=&gt;(</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;Button key={i} variant={q4===i?"":"outline"} onClick={()=&gt;setQ4(i)}&gt;{o}&lt;/Button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>))}</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;Text dim&gt;Not: Puanın 7 gün sonra netleşir (şimdilik provizyonel).&lt;/Text&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;/Card&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;Card&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;SectionTitle&gt;A5: Meme Başlığı&lt;/SectionTitle&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;input value={q5} onChange={(e)=&gt;setQ5(e.target.value)}</p>
+<p class="p1"><span class="Apple-converted-space">                   </span>className="w-full bg-transparent rounded-xl p-3 border"</p>
+<p class="p1"><span class="Apple-converted-space">                   </span>style={{borderColor:COLORS.border, color:COLORS.text}}</p>
+<p class="p1"><span class="Apple-converted-space">                   </span>placeholder="Komik/yaratıcı bir başlık yaz"/&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;/Card&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;div className="flex gap-2"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;Button onClick={()=&gt;setStep("killcard")}&gt;Skoru Gör&lt;/Button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;Button variant="outline" onClick={()=&gt;setStep("summary")}&gt;Geri&lt;/Button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>const KillCard=()=&gt;{</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const svgRef=useRef(null);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>useEffect(()=&gt;{ /* skor Summary→Quiz→KillCard geçişinde hesaplandı */ },[]);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>return (</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;div className="max-w-4xl mx-auto p-6 space-y-4"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;Card&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;SectionTitle&gt;Kill Card (Paylaş)&lt;/SectionTitle&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;div className="flex flex-col md:flex-row gap-6 items-start"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;div className="w-full md:w-1/2"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>&lt;KillCardSVG title={news.title} source={news.source} score={score} streak={streakMult} bullets={bullets} svgRef={svgRef}/&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;div className="w-full md:w-1/2 space-y-3"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>&lt;Text&gt;Skor; doğru/yanlış, kaynak isabeti, slider, provizyonel tahmin ve meme başlığından oluşur. Streak çarpanı eklenir.&lt;/Text&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>&lt;div className="flex gap-2"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;Button onClick={()=&gt;downloadKillCardPNG(svgRef,"killcard.png")}&gt;PNG indir&lt;/Button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;Button variant="outline" onClick={()=&gt;setStep("landing")}&gt;Ana sayfa&lt;/Button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>&lt;Card&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;SectionTitle&gt;Özet&lt;/SectionTitle&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;ul className="list-disc pl-6" style={{color:COLORS.text}}&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                      </span>{bullets.map((b,i)=&gt;(&lt;li key={i}&gt;{b}&lt;/li&gt;))}</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/ul&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>&lt;/Card&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/Card&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>return (</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div style={{background:COLORS.bg, minHeight:"100vh", fontFamily:"Inter, system-ui"}}&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>{step==="landing" &amp;&amp; &lt;Landing/&gt;}</p>
+<p class="p1"><span class="Apple-converted-space">          </span>{step==="summary" &amp;&amp; &lt;Summary/&gt;}</p>
+<p class="p1"><span class="Apple-converted-space">          </span>{step==="quiz" &amp;&amp; &lt;Quiz/&gt;}</p>
+<p class="p1"><span class="Apple-converted-space">          </span>{step==="killcard" &amp;&amp; &lt;KillCard/&gt;}</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;footer className="text-center text-xs py-6" style={{color:COLORS.dim}}&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>© BossFight Gündem – Günlük limit: 3 haber • Bu bir demo arayüzüdür.</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;/footer&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>ReactDOM.createRoot(document.getElementById('root')).render(&lt;App/&gt;);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;/script&gt;</p>
+<p class="p1">&lt;/body&gt;</p>
+<p class="p1">&lt;/html&gt;</p>
+</body>
+</html>
